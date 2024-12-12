@@ -1,43 +1,45 @@
-CREATE OR REPLACE FUNCTION update_coin_scd2()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE VIEW coin_insert_view AS
+SELECT CoinName, Price, MCAP, Liquidity, NumberOfHolders, PercentOfTop30Holders
+FROM "Coin";
+
+
+CREATE OR REPLACE FUNCTION insert_coin_scd2()
+RETURNS TRIGGER AS '
 DECLARE
     new_version_id INTEGER;
 BEGIN
-    -- Закрываем текущую активную запись
-    UPDATE "Coin"
-    SET ValidTo = CURRENT_TIMESTAMP, IsActive = FALSE
-    WHERE CoinID = NEW.CoinID AND IsActive = TRUE;
 
-    -- Получаем новый VersionID
     SELECT COALESCE(MAX(VersionID), 0) + 1 INTO new_version_id
     FROM "Coin"
-    WHERE CoinID = NEW.CoinID;
+    WHERE CoinName = NEW.CoinName;
 
-    -- Вставляем новую запись
+    UPDATE "Coin"
+    SET ValidTo = CURRENT_TIMESTAMP, IsActive = FALSE
+    WHERE CoinName = NEW.CoinName AND IsActive = TRUE;
+
     INSERT INTO "Coin" (
-        CoinID, VersionID, CoinName, Price, MCAP, Liquidity, NumberOfHolders, PercentOfTop30Holders,
+        VersionID, CoinName, Price, MCAP, Liquidity, NumberOfHolders, PercentOfTop30Holders,
         ValidFrom, ValidTo, IsActive
     ) VALUES (
-        NEW.CoinID, new_version_id, NEW.CoinName, NEW.Price, NEW.MCAP, NEW.Liquidity, NEW.NumberOfHolders, NEW.PercentOfTop30Holders,
+        new_version_id, NEW.CoinName, NEW.Price, NEW.MCAP, NEW.Liquidity, NEW.NumberOfHolders, NEW.PercentOfTop30Holders,
         CURRENT_TIMESTAMP, NULL, TRUE
     );
 
-    -- Обновляем связанные записи в WalletCoins
-    UPDATE "WalletCoins"
+    UPDATE "Wallet"
     SET CoinVersionID = new_version_id
-    WHERE CoinID = NEW.CoinID;
+    WHERE CoinName = NEW.CoinName;
 
-    -- Обновляем связанные записи в CoinExchange
     UPDATE "CoinExchange"
     SET CoinVersionID = new_version_id
-    WHERE CoinID = NEW.CoinID;
+    WHERE CoinName = NEW.CoinName;
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+' LANGUAGE plpgsql;
 
-CREATE TRIGGER coin_scd2_trigger
-BEFORE UPDATE ON "Coin"
+CREATE TRIGGER coin_insert_trigger
+INSTEAD OF INSERT ON coin_insert_view
 FOR EACH ROW
-WHEN (OLD.* IS DISTINCT FROM NEW.*)
-EXECUTE FUNCTION update_coin_scd2();
+EXECUTE FUNCTION insert_coin_scd2();
+
+-- ALTER TABLE "Coin" ENABLE TRIGGER coin_scd2_trigger;

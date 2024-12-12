@@ -9,15 +9,8 @@ CREATE TABLE IF NOT EXISTS "User" (
     Passport VARCHAR(20) UNIQUE NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS "Wallet" (
-    WalletID SERIAL PRIMARY KEY,
-    UserID INTEGER REFERENCES "User"(UserID) ON DELETE CASCADE,
-    WalletNumber VARCHAR(50) UNIQUE NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS "Coin" (
-    CoinID SERIAL,
-    VersionID SERIAL,
+    VersionID INTEGER,
     CoinName VARCHAR(50) NOT NULL,
     Price DECIMAL(15,2) NOT NULL CHECK (Price > 0),
     MCAP DECIMAL(20,2),
@@ -27,8 +20,19 @@ CREATE TABLE IF NOT EXISTS "Coin" (
     ValidFrom TIMESTAMP NOT NULL,
     ValidTo TIMESTAMP,
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
-    PRIMARY KEY (CoinID, VersionID)
+    PRIMARY KEY (CoinName, VersionID)
 );
+
+CREATE TABLE IF NOT EXISTS "Wallet" (
+    UserID INTEGER REFERENCES "User"(UserID) ON DELETE CASCADE,
+    CoinName VARCHAR (50) NOT NULL,
+    CoinVersionID INTEGER NOT NULL,
+    WalletNumber VARCHAR(50) PRIMARY KEY,
+    Quantity DECIMAL(15,2) NOT NULL,
+    UNIQUE (WalletNumber, CoinName, CoinVersionID),
+    FOREIGN KEY (CoinName, CoinVersionID) REFERENCES "Coin"(CoinName, VersionID) ON DELETE CASCADE
+);
+
 
 CREATE TABLE IF NOT EXISTS "Exchange"(
     ExchangeID SERIAL PRIMARY KEY NOT NULL,
@@ -38,33 +42,26 @@ CREATE TABLE IF NOT EXISTS "Exchange"(
 
 CREATE TABLE IF NOT EXISTS "Transaction" (
     TransactionID VARCHAR(64) PRIMARY KEY UNIQUE NOT NULL,
-    WalletFirstID INTEGER REFERENCES "Wallet"(WalletID) ON DELETE CASCADE,
-    WalletSecondID INTEGER REFERENCES "Wallet"(WalletID) ON DELETE CASCADE,
-    CoinID INTEGER,
+    WalletFirstNumber VARCHAR(50) NOT NULL,
+    WalletSecondNumber VARCHAR(50) NOT NULL,
+    CoinName VARCHAR(50) NOT NULL,
     CoinVersionID INTEGER,
     ExchangeID INTEGER REFERENCES "Exchange"(ExchangeID) ON DELETE CASCADE,
     TimeTransaction TIMESTAMP NOT NULL,
     TransferredAmount DECIMAL(15,2) NOT NULL CHECK (TransferredAmount > 0),
-    FOREIGN KEY (CoinID, CoinVersionID) REFERENCES "Coin"(CoinID, VersionID)
+    FOREIGN KEY (CoinName, CoinVersionID) REFERENCES "Coin"(CoinName, VersionID),
+    FOREIGN KEY (WalletFirstNumber) REFERENCES "Wallet"(WalletNumber) on DELETE CASCADE,
+    FOREIGN KEY (WalletSecondNumber) REFERENCES "Wallet"(WalletNumber) on DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS "WalletCoins" (
-    WalletID INTEGER NOT NULL,
-    CoinID INTEGER NOT NULL,
-    CoinVersionID INTEGER NOT NULL,
-    Quantity DECIMAL(15, 2) NOT NULL,
-    PRIMARY KEY (WalletID, CoinID, CoinVersionID),
-    FOREIGN KEY (WalletID) REFERENCES "Wallet"(WalletID) ON DELETE CASCADE,
-    FOREIGN KEY (CoinID, CoinVersionID) REFERENCES "Coin"(CoinID, VersionID)
-);
 
 CREATE TABLE IF NOT EXISTS "CoinExchange" (
     ExchangeID INTEGER NOT NULL,
-    CoinID INTEGER NOT NULL,
+    CoinName VARCHAR(50) NOT NULL,
     CoinVersionID INTEGER NOT NULL,
-    PRIMARY KEY (ExchangeID, CoinID, CoinVersionID),
+    PRIMARY KEY (ExchangeID, CoinName, CoinVersionID),
     FOREIGN KEY (ExchangeID) REFERENCES "Exchange"(ExchangeID) ON DELETE CASCADE,
-    FOREIGN KEY (CoinID, CoinVersionID) REFERENCES "Coin"(CoinID, VersionID)
+    FOREIGN KEY (CoinName, CoinVersionID) REFERENCES "Coin"(CoinName, VersionID)
 );
 
 CREATE TABLE IF NOT EXISTS "UserExchange" (
