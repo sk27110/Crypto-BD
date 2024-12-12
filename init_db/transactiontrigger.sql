@@ -42,4 +42,10 @@ BEFORE INSERT ON "Transaction"
 FOR EACH ROW
 EXECUTE FUNCTION manage_transaction();
 
+CREATE TRIGGER transaction_trigger_update
+BEFORE UPDATE ON "Transaction"
+FOR EACH ROW
+EXECUTE FUNCTION manage_transaction();
+
 ALTER TABLE "Transaction" ENABLE TRIGGER transaction_trigger;
+ALTER TABLE "Transaction" ENABLE TRIGGER transaction_trigger_update;

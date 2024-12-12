@@ -1,3 +1,5 @@
+
+-- VIEW для вставки новой монеты
 CREATE OR REPLACE VIEW coin_insert_view AS
 SELECT CoinName, Price, MCAP, Liquidity, NumberOfHolders, PercentOfTop30Holders
 FROM "Coin";
