@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS "Wallet" (
     WalletNumber VARCHAR(50) PRIMARY KEY,
     Quantity DECIMAL(15,2) NOT NULL,
     UNIQUE (WalletNumber, CoinName, CoinVersionID),
-    FOREIGN KEY (CoinName, CoinVersionID) REFERENCES "Coin"(CoinName, VersionID) ON DELETE CASCADE
+    FOREIGN KEY (CoinName, CoinVersionID) REFERENCES "Coin"(CoinName, VersionID) ON DELETE CASCADE,
+    IsDelete BOOLEAN not NULL DEFAULT False
 );
 
 

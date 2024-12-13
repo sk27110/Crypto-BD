@@ -30,7 +30,7 @@ LEFT JOIN
 LEFT JOIN 
     "Coin" c ON w.CoinName = c.CoinName AND w.CoinVersionID = c.VersionID
 WHERE 
-    (c.IsActive = TRUE OR c.IsActive IS NULL) and u.IsDelete = False
+    (c.IsActive = TRUE OR c.IsActive IS NULL) and u.IsDelete = False and w.IsDelete = False
 GROUP BY 
     u.UserID, u.Username, u.Surename
 HAVING COALESCE(SUM(w.Quantity * c.Price), 0) > 25
@@ -57,7 +57,7 @@ join "Wallet" w
 on u.UserID = w.UserID
 inner join "Transaction" t
 on w.WalletNumber = t.WalletFirstNumber or w.WalletNumber = t.WalletSecondNumber
-where u.IsDelete = False
+where u.IsDelete = False and w.IsDelete = False
 group by u.UserID
 order by max(t.TimeTransaction) desc;
 
@@ -75,7 +75,7 @@ LEFT JOIN
     "Wallet" w ON u.UserID = w.UserID
 LEFT JOIN 
     "Transaction" t ON w.WalletNumber = t.WalletFirstNumber OR w.WalletNumber = t.WalletSecondNumber
-where u.IsDelete = False
+where u.IsDelete = False and w.IsDelete = False
 GROUP BY 
     u.UserID, u.Username, u.Surename
 ORDER BY 
@@ -94,7 +94,7 @@ WITH UserCoinPurchases AS (
         "User" u
     JOIN "Wallet" w ON u.UserID = w.UserID
     JOIN "Transaction" t ON w.WalletNumber = t.WalletSecondNumber
-    where u.IsDelete = False
+    where u.IsDelete = False and w.IsDelete = False
     GROUP BY 
         u.UserID, t.CoinName
 )

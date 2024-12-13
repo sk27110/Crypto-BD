@@ -8,6 +8,7 @@ BEGIN
     WHERE UserID = OLD.UserID;
     
     IF user_dont_exist = False THEN
+        UPDATE "Wallet" SET IsDelete = TRUE WHERE UserID = OLD.UserID;
         UPDATE "User" SET IsDelete = TRUE WHERE USerID = OLD.UserID;
 
     ELSIF user_dont_exist = True THEN
