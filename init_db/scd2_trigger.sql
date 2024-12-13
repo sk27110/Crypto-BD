@@ -5,6 +5,11 @@ SELECT CoinName, Price, MCAP, Liquidity, NumberOfHolders, PercentOfTop30Holders
 FROM "Coin";
 
 
+-- VIEV для обновления данных монеты
+CREATE OR REPLACE VIEW coin_update_view AS
+SELECT CoinName, Price, MCAP, Liquidity, NumberOfHolders, PercentOfTop30Holders
+FROM "Coin";
+
 CREATE OR REPLACE FUNCTION insert_coin_scd2()
 RETURNS TRIGGER AS '
 DECLARE
@@ -41,6 +46,11 @@ END;
 
 CREATE TRIGGER coin_insert_trigger
 INSTEAD OF INSERT ON coin_insert_view
+FOR EACH ROW
+EXECUTE FUNCTION insert_coin_scd2();
+
+CREATE TRIGGER coin_update_trigger
+INSTEAD OF UPDATE ON coin_update_view
 FOR EACH ROW
 EXECUTE FUNCTION insert_coin_scd2();
 

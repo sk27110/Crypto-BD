@@ -75,11 +75,12 @@ LEFT JOIN
     "Wallet" w ON u.UserID = w.UserID
 LEFT JOIN 
     "Transaction" t ON w.WalletNumber = t.WalletFirstNumber OR w.WalletNumber = t.WalletSecondNumber
-where u.IsDelete = False and w.IsDelete = False
+where u.IsDelete = False
 GROUP BY 
     u.UserID, u.Username, u.Surename
 ORDER BY 
     TransactionCount DESC;
+
 
 --По каждому пользователю узнать самую покупаемую им монету
 WITH UserCoinPurchases AS (
@@ -88,7 +89,7 @@ WITH UserCoinPurchases AS (
         u.Username,
         u.Surename,
         t.CoinName,
-        COUNT(*) as PurchaseCount,
+        SUM(Quantity) as Quantity,
         ROW_NUMBER() OVER (PARTITION BY u.UserID ORDER BY COUNT(*) DESC) as rn
     FROM 
         "User" u
@@ -103,13 +104,13 @@ SELECT
     Username,
     Surename,
     CoinName as MostPurchasedCoin,
-    PurchaseCount
+    Quantity
 FROM 
     UserCoinPurchases
 WHERE 
     rn = 1
 ORDER BY 
-    PurchaseCount DESC;
+    Quantity DESC;
 
 
 -- Отсортировать монеты по росту цены за сутки
@@ -136,38 +137,35 @@ FROM
 ORDER BY 
     PriceChangePercent DESC;
 
+--Для каждой монеты вывести кошелек с наибольшим числом этой монеты и владельца этого кошелька
+WITH RankedWallets AS (
+    SELECT 
+        w.CoinName,
+        w.WalletNumber,
+        u.UserID,
+        u.Username,
+        u.Surename,
+        w.Quantity,
+        ROW_NUMBER() OVER (PARTITION BY w.CoinName ORDER BY w.Quantity DESC) as rank
+    FROM 
+        "Wallet" w
+    JOIN 
+        "User" u ON w.UserID = u.UserID
+    WHERE 
+        w.IsDelete = FALSE AND u.IsDelete = FALSE
+)
+SELECT 
+    CoinName,
+    WalletNumber,
+    UserID,
+    Username,
+    Surename,
+    Quantity
+FROM 
+    RankedWallets
+WHERE 
+    rank = 1
+ORDER BY 
+    CoinName;
 
--- Посмотреть топ пользователей по прибыли за сутки
--- WITH UserProfits AS (
---     SELECT 
---         u.UserID,
---         u.Username,
---         u.Surename,
---         SUM(
---             CASE 
---                 WHEN t.WalletFirstNumber = w.WalletNumber THEN -t.TransferredAmount * c.Price
---                 WHEN t.WalletSecondNumber = w.WalletNumber THEN t.TransferredAmount * c.Price
---                 ELSE 0
---             END
---         ) as DailyProfit
---     FROM 
---         "User" u
---     JOIN "Wallet" w ON u.UserID = w.UserID
---     JOIN "Transaction" t ON w.WalletNumber IN (t.WalletFirstNumber, t.WalletSecondNumber)
---     JOIN "Coin" c ON t.CoinName = c.CoinName AND t.CoinVersionID = c.VersionID
---     WHERE 
---         t.TimeTransaction >= CURRENT_DATE - INTERVAL '1 day'
---         AND c.IsActive = TRUE
---     GROUP BY 
---         u.UserID, u.Username, u.Surename
--- )
--- SELECT 
---     UserID,
---     Username,
---     Surename,
---     ROUND(DailyProfit::numeric, 2) as DailyProfit
--- FROM 
---     UserProfits
--- ORDER BY 
---     DailyProfit DESC
--- LIMIT 10;
+

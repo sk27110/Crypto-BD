@@ -1,3 +1,4 @@
+--Функция которая добавляет новый кошелек к пользователю
 CREATE OR REPLACE FUNCTION add_wallet(
     p_user_id INTEGER,
     p_wallet_number VARCHAR(255),
@@ -19,3 +20,35 @@ BEGIN
     END IF;
 END;
 ' LANGUAGE plpgsql;
+
+--Получает для каждого пользователя его монеты и их число на всех кошельках
+CREATE OR REPLACE FUNCTION get_all_users_coins()
+RETURNS TABLE (
+    UserID INTEGER,
+    Username VARCHAR(50),
+    Surename VARCHAR(50),
+    CoinName VARCHAR(50),
+    TotalQuantity DECIMAL(15,2)
+) AS '
+BEGIN
+    RETURN QUERY
+    SELECT 
+        u.UserID,
+        u.Username,
+        u.Surename,
+        w.CoinName,
+        SUM(w.Quantity) AS TotalQuantity
+    FROM 
+        "User" u
+    JOIN 
+        "Wallet" w ON u.UserID = w.UserID
+    WHERE 
+        u.IsDelete = FALSE AND w.IsDelete = FALSE
+    GROUP BY 
+        u.UserID, u.Username, u.Surename, w.CoinName
+    ORDER BY 
+        u.UserID, w.CoinName;
+END;
+' LANGUAGE plpgsql;
+
+SELECT * FROM get_all_users_coins();

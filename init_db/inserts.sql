@@ -46,16 +46,16 @@ VALUES
 
 
 INSERT INTO "Wallet" (UserID, CoinName, CoinVersionID, WalletNumber , Quantity) VALUES
-    (1, 'Bitcoin', 1, 'WALLET001', 0.23),
-    (1, 'Ethereum', 1, 'WALLET002', 32),
-    (2, 'Tether', 1, 'WALLET003', 2.3),
-    (2, 'USD Coin', 1, 'WALLET004', 23),
-    (3, 'Binance Coin', 1, 'WALLET005', 4.3),
-    (3, 'BNB', 1, 'WALLET006', 54),
-    (1, 'Cardano', 1, 'WALLET007', 2.34),
-    (2, 'XRP', 1, 'WALLET008', 43),
-    (3, 'Dogecoin', 1, 'WALLET009', 543.54),
-    (1, 'Shiba Inu', 1, 'WALLET010', 0.45);
+    (1, 'Bitcoin', 1, 'WALLET001', 10),
+    (1, 'Ethereum', 1, 'WALLET002',10),
+    (2, 'Tether', 1, 'WALLET003', 10),
+    (2, 'USD Coin', 1, 'WALLET004', 10),
+    (3, 'Binance Coin', 1, 'WALLET005', 10),
+    (3, 'BNB', 1, 'WALLET006', 10),
+    (1, 'Cardano', 1, 'WALLET007', 10),
+    (2, 'XRP', 1, 'WALLET008', 10),
+    (3, 'Dogecoin', 1, 'WALLET009', 10),
+    (1, 'Shiba Inu', 1, 'WALLET010', 10);
 
 
 
